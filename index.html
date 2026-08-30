@@ -472,19 +472,72 @@
         }
 
         .datetime-input {
-            padding: 5px 10px;
-            border-radius: 8px;
-            background: white;
-            border: 1.5px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,240,245,0.9));
+            border: 1.5px solid var(--accent-light);
             color: var(--text-primary);
             font-size: 12px;
             font-family: inherit;
+            font-weight: 500;
             outline: none;
             cursor: pointer;
             transition: all var(--transition);
+            box-shadow: 0 2px 6px rgba(192,132,184,0.08);
+            letter-spacing: 0.3px;
         }
 
-        .datetime-input:focus { border-color: var(--accent); }
+        .datetime-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow), 0 2px 8px rgba(192,132,184,0.15);
+            background: white;
+        }
+
+        .datetime-input:hover {
+            border-color: var(--accent);
+            box-shadow: 0 3px 10px rgba(192,132,184,0.12);
+        }
+
+        .datetime-input::-webkit-calendar-picker-indicator {
+            background: none;
+            cursor: pointer;
+            padding: 2px;
+            border-radius: 4px;
+            opacity: 0.6;
+            transition: all 0.2s ease;
+            filter: invert(40%) sepia(20%) saturate(600%) hue-rotate(260deg);
+        }
+
+        .datetime-input::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+            background: var(--accent-light);
+        }
+
+        .datetime-input::-webkit-datetime-edit-fields-wrapper {
+            padding: 0;
+        }
+
+        .datetime-input::-webkit-datetime-edit-day-field,
+        .datetime-input::-webkit-datetime-edit-month-field,
+        .datetime-input::-webkit-datetime-edit-year-field,
+        .datetime-input::-webkit-datetime-edit-hour-field,
+        .datetime-input::-webkit-datetime-edit-minute-field,
+        .datetime-input::-webkit-datetime-edit-ampm-field {
+            padding: 1px 3px;
+            border-radius: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .datetime-input::-webkit-datetime-edit-day-field:focus,
+        .datetime-input::-webkit-datetime-edit-month-field:focus,
+        .datetime-input::-webkit-datetime-edit-year-field:focus,
+        .datetime-input::-webkit-datetime-edit-hour-field:focus,
+        .datetime-input::-webkit-datetime-edit-minute-field:focus,
+        .datetime-input::-webkit-datetime-edit-ampm-field:focus {
+            background: var(--accent-light);
+            color: var(--accent-deep);
+            outline: none;
+        }
 
         /* ========== SEARCH ========== */
         .search-bar {
@@ -935,7 +988,6 @@
         }
 
         .edit-modal input[type="text"],
-        .edit-modal input[type="datetime-local"],
         .edit-modal select {
             width: 100%;
             padding: 10px 14px;
@@ -947,6 +999,22 @@
             font-family: inherit;
             outline: none;
             transition: all var(--transition);
+        }
+
+        .edit-modal input[type="datetime-local"] {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,240,245,0.9));
+            border: 1.5px solid var(--accent-light);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            transition: all var(--transition);
+            box-shadow: 0 2px 6px rgba(192,132,184,0.08);
         }
 
         .edit-modal input:focus,
@@ -1719,18 +1787,23 @@
         }
 
         function sendNotification(task) {
-            const priorityLabels = { urgent: 'URGENT', high: 'High', medium: 'Medium', low: 'Low' };
+            const priorityLabels = { urgent: '🔴 URGENT', high: '🟠 High', medium: '🟣 Medium', low: '🟢 Low' };
+            const catLabels = { task: 'Task', followup: 'Follow-up', meeting: 'Meeting' };
             addNotification(task);
             if ('Notification' in window && Notification.permission === 'granted') {
-                const notif = new Notification(`TaskPilot - ${priorityLabels[task.priority]} Priority`, {
-                    body: task.title,
+                const notif = new Notification(`TaskPilot — ${priorityLabels[task.priority]}`, {
+                    body: `${task.title}\n${catLabels[task.category] || 'Task'} • Due now`,
+                    icon: 'icon-192.png',
+                    badge: 'icon-192.png',
                     tag: task.id,
-                    requireInteraction: task.priority === 'urgent'
+                    requireInteraction: true,
+                    silent: false
                 });
                 notif.onclick = () => { window.focus(); openPanel(); };
             }
             showToast(task);
             playSound();
+            updateBadge();
         }
 
         function playSound() {
@@ -1993,6 +2066,56 @@
             const count = overdue || pending;
             badgeCount.textContent = count;
             badgeCount.classList.toggle('hidden', count === 0);
+            updateFaviconBadge(count, overdue > 0);
+        }
+
+        function updateFaviconBadge(count, isUrgent) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+
+            ctx.beginPath();
+            ctx.arc(32, 32, 28, 0, Math.PI * 2);
+            const grad = ctx.createLinearGradient(0, 0, 64, 64);
+            grad.addColorStop(0, '#c084b8');
+            grad.addColorStop(1, '#8b7ec8');
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 26px Poppins, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('✓', 32, 34);
+
+            if (count > 0) {
+                const badgeX = 48, badgeY = 12, badgeR = 15;
+                ctx.beginPath();
+                ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
+                ctx.fillStyle = isUrgent ? '#e07a8e' : '#d4956b';
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 16px Poppins, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(count > 99 ? '99+' : String(count), badgeX, badgeY + 1);
+            }
+
+            const link = document.querySelector('link[rel="icon"]') || document.createElement('link');
+            link.rel = 'icon';
+            link.href = canvas.toDataURL('image/png');
+            document.head.appendChild(link);
+
+            if (navigator.setAppBadge && count > 0) {
+                navigator.setAppBadge(count).catch(() => {});
+            } else if (navigator.clearAppBadge && count === 0) {
+                navigator.clearAppBadge().catch(() => {});
+            }
         }
 
         // ============ SNOOZE UI ============
