@@ -1134,6 +1134,131 @@
 
         .dash-empty-msg strong { color: var(--accent-deep); }
 
+        /* ========== NOTIFICATION CENTER ========== */
+        .notif-btn { position: relative; }
+        .notif-btn .notif-dot {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--rose);
+            border: 1.5px solid white;
+            display: none;
+        }
+        .notif-btn .notif-dot.visible { display: block; animation: pulse-badge 2s ease-in-out infinite; }
+
+        .notif-panel {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            box-shadow: 0 12px 40px rgba(155,93,139,0.2);
+            z-index: 10005;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .notif-panel.visible { display: flex; }
+
+        .notif-panel-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notif-panel-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .notif-clear-btn {
+            font-size: 11px;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all var(--transition);
+        }
+
+        .notif-clear-btn:hover { background: var(--rose-bg); color: var(--rose); }
+
+        .notif-list {
+            overflow-y: auto;
+            max-height: 340px;
+            padding: 6px;
+        }
+
+        .notif-list::-webkit-scrollbar { width: 4px; }
+        .notif-list::-webkit-scrollbar-thumb { background: var(--accent-light); border-radius: 2px; }
+
+        .notif-item {
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            transition: background var(--transition);
+            cursor: default;
+        }
+
+        .notif-item:hover { background: var(--bg-hover); }
+
+        .notif-item.unread { background: rgba(192,132,184,0.06); }
+
+        .notif-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+        }
+
+        .notif-icon.urgent { background: var(--rose-bg); }
+        .notif-icon.normal { background: var(--lavender-bg); }
+
+        .notif-content { flex: 1; min-width: 0; }
+
+        .notif-text {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-primary);
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .notif-time {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .notif-empty {
+            padding: 30px 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .notif-empty-icon { font-size: 28px; margin-bottom: 8px; opacity: 0.5; }
+
         /* ========== RESPONSIVE ========== */
         @media (max-width: 500px) {
             .panel { width: calc(100vw - 24px); right: calc(-100vw); }
@@ -1143,6 +1268,7 @@
             .dash-stat { min-width: 80px; padding: 12px 16px; }
             .dash-stat-number { font-size: 22px; }
             .dashboard { padding: 20px; }
+            .notif-panel { width: 280px; }
         }
     </style>
 </head>
@@ -1192,13 +1318,27 @@
                     <div class="subtitle">Your Personal Assistant</div>
                 </div>
             </div>
-            <div class="header-actions">
+            <div class="header-actions" style="position:relative;">
                 <button class="icon-btn" id="searchToggle" title="Search">
                     <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                </button>
+                <button class="icon-btn notif-btn" id="notifToggle" title="Notifications">
+                    <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+                    <span class="notif-dot" id="notifDot"></span>
                 </button>
                 <button class="icon-btn" id="clearAllBtn" title="Clear completed">
                     <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
                 </button>
+                <!-- Notification Panel -->
+                <div class="notif-panel" id="notifPanel">
+                    <div class="notif-panel-header">
+                        <h3>Notifications</h3>
+                        <button class="notif-clear-btn" id="notifClearAll">Clear all</button>
+                    </div>
+                    <div class="notif-list" id="notifList">
+                        <div class="notif-empty"><div class="notif-empty-icon">&#128276;</div>No notifications yet</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -1429,6 +1569,7 @@
             setupEventListeners();
             setDefaultDueDate();
             startDashboardClock();
+            setupNotificationCenter();
         }
 
         function setGreeting() {
@@ -1488,8 +1629,98 @@
             }
         }
 
+        const NOTIF_STORAGE_KEY = 'taskpilot_notifications';
+        let notifications = [];
+
+        function loadNotifications() {
+            try { notifications = JSON.parse(storageGet(NOTIF_STORAGE_KEY) || '[]'); } catch { notifications = []; }
+        }
+
+        function saveNotifications() { storageSet(NOTIF_STORAGE_KEY, JSON.stringify(notifications)); }
+
+        function addNotification(task) {
+            notifications.unshift({
+                id: 'notif_' + Date.now(),
+                taskId: task.id,
+                title: task.title,
+                priority: task.priority,
+                time: new Date().toISOString(),
+                read: false
+            });
+            if (notifications.length > 50) notifications = notifications.slice(0, 50);
+            saveNotifications();
+            renderNotifications();
+        }
+
+        function renderNotifications() {
+            const list = document.getElementById('notifList');
+            const dot = document.getElementById('notifDot');
+            const unread = notifications.filter(n => !n.read).length;
+
+            dot.classList.toggle('visible', unread > 0);
+
+            if (!notifications.length) {
+                list.innerHTML = '<div class="notif-empty"><div class="notif-empty-icon">&#128276;</div>No notifications yet</div>';
+                return;
+            }
+
+            list.innerHTML = notifications.map(n => {
+                const ago = getTimeAgo(new Date(n.time));
+                const isUrgent = n.priority === 'urgent';
+                return `<div class="notif-item ${n.read ? '' : 'unread'}">
+                    <div class="notif-icon ${isUrgent ? 'urgent' : 'normal'}">${isUrgent ? '&#128308;' : '&#128276;'}</div>
+                    <div class="notif-content">
+                        <div class="notif-text">${escapeHtml(n.title)}</div>
+                        <div class="notif-time">${n.priority.toUpperCase()} &middot; ${ago}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function getTimeAgo(date) {
+            const diff = Date.now() - date.getTime();
+            const mins = Math.floor(diff / 60000);
+            if (mins < 1) return 'just now';
+            if (mins < 60) return `${mins}m ago`;
+            const hrs = Math.floor(mins / 60);
+            if (hrs < 24) return `${hrs}h ago`;
+            const days = Math.floor(hrs / 24);
+            return `${days}d ago`;
+        }
+
+        function setupNotificationCenter() {
+            const btn = document.getElementById('notifToggle');
+            const panel = document.getElementById('notifPanel');
+
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                panel.classList.toggle('visible');
+                if (panel.classList.contains('visible')) {
+                    notifications.forEach(n => n.read = true);
+                    saveNotifications();
+                    renderNotifications();
+                }
+            });
+
+            document.getElementById('notifClearAll').addEventListener('click', () => {
+                notifications = [];
+                saveNotifications();
+                renderNotifications();
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!panel.contains(e.target) && e.target !== btn) {
+                    panel.classList.remove('visible');
+                }
+            });
+
+            loadNotifications();
+            renderNotifications();
+        }
+
         function sendNotification(task) {
             const priorityLabels = { urgent: 'URGENT', high: 'High', medium: 'Medium', low: 'Low' };
+            addNotification(task);
             if ('Notification' in window && Notification.permission === 'granted') {
                 const notif = new Notification(`TaskPilot - ${priorityLabels[task.priority]} Priority`, {
                     body: task.title,
