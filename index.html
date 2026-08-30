@@ -2067,6 +2067,7 @@
             badgeCount.textContent = count;
             badgeCount.classList.toggle('hidden', count === 0);
             updateFaviconBadge(count, overdue > 0);
+            document.title = count > 0 ? `(${count}) TaskPilot` : 'TaskPilot - Personal Assistant';
         }
 
         function updateFaviconBadge(count, isUrgent) {
